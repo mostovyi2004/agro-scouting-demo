@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Агроінспектування</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Демо оновлення</p>
+        <h1>Створення агрономічного інспектування</h1>
+      </div>
+      <div class="status-pill" id="summaryStatus">Чернетка</div>
+    </header>
+
+    <main class="layout">
+      <!-- Ліва колонка навігації не містить бізнес-логіки; її можна замінити
+           на компонент роутера у великому застосунку без зміни app-main.js. -->
+      <aside class="sidebar">
+        <nav aria-label="Етапи форми">
+          <a href="#base" class="active">Основа</a>
+          <a href="#parameters">Параметри</a>
+          <a href="#photos">Фото</a>
+          <a href="#report">Звіт</a>
+        </nav>
+        <section class="mini-panel">
+          <span>Заповнено</span>
+          <strong id="progressText">0%</strong>
+          <div class="progress"><span id="progressBar"></span></div>
+        </section>
+        <section class="mini-panel">
+          <span>Параметрів у періоді</span>
+          <strong id="parameterCount">0</strong>
+        </section>
+      </aside>
+
+      <section class="content">
+        <section id="base" class="band">
+          <div class="section-title">
+            <p>Крок 1</p>
+            <h2>Дані інспекції</h2>
+          </div>
+          <div class="form-grid">
+            <label>
+              <span>Агроном</span>
+              <input id="agronomist" type="text" placeholder="Ім'я та прізвище" autocomplete="name" />
+            </label>
+            <label>
+              <span>Дата</span>
+              <input id="inspectionDate" type="date" />
+            </label>
+            <label>
+              <span>Поле</span>
+              <input id="fieldName" type="text" placeholder="Назва або ID поля" />
+            </label>
+            <label>
+              <span>Площа, га</span>
+              <input id="fieldArea" type="number" min="0" step="0.1" placeholder="0.0" />
+            </label>
+            <label>
+              <span>Культура</span>
+              <select id="cropSelect"></select>
+            </label>
+            <label>
+              <span>Період інспекції</span>
+              <select id="periodSelect"></select>
+            </label>
+          </div>
+        </section>
+
+        <section id="parameters" class="band">
+          <div class="section-title">
+            <p>Крок 2</p>
+            <h2>Параметри періоду</h2>
+          </div>
+          <div id="parameterList" class="parameter-list"></div>
+        </section>
+
+        <section id="photos" class="band">
+          <div class="section-title">
+            <p>Крок 3</p>
+            <h2>Фото підтвердження</h2>
+          </div>
+          <div class="photo-uploader">
+            <input id="photoInput" type="file" accept="image/*" multiple />
+            <div>
+              <strong>Додайте фото</strong>
+              <span id="photoHint">Мінімум 2 фото, плюс одне фото за кожну сильну проблему.</span>
+            </div>
+          </div>
+          <div id="photoPreview" class="photo-grid"></div>
+        </section>
+
+        <section id="report" class="band">
+          <div class="section-title">
+            <p>Крок 4</p>
+            <h2>Фінальний звіт</h2>
+          </div>
+          <div class="form-grid final-grid">
+            <label>
+              <span>Ризики</span>
+              <select id="finalRisk">
+                <option value="">Оберіть значення</option>
+                <option>Все добре, критичних ризиків немає</option>
+                <option>Є незначні ризики, потрібен контроль</option>
+                <option>Є проблеми, потрібна корекція технології</option>
+                <option>Потрібна термінова дія або повторний огляд</option>
+                <option>Критичний ризик, потрібне управлінське рішення</option>
+              </select>
+            </label>
+            <label class="wide">
+              <span>Короткий висновок агронома</span>
+              <textarea id="summaryComment" rows="3" placeholder="Стан поля, основний ризик, потрібна дія"></textarea>
+            </label>
+          </div>
+          <div id="alerts" class="alerts"></div>
+          <div id="reportPreview" class="report-preview"></div>
+          <div class="actions">
+            <button id="exportHtml" type="button">Звіт HTML</button>
+            <button id="exportJson" type="button">JSON для БД</button>
+            <button id="exportCsv" type="button">CSV спостережень</button>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <noscript>
+      Для роботи форми потрібно увімкнути JavaScript.
+    </noscript>
+
+    <script src="data/agro-config.js"></script>
+    <script src="agro-constants.js"></script>
+    <script src="agro-rules.js"></script>
+    <script src="agro-report.js"></script>
+    <script src="app-domain.js"></script>
+    <script src="app-controls.js"></script>
+    <script src="app-reporting.js"></script>
+    <script src="app-main.js"></script>
+  </body>
+</html>
