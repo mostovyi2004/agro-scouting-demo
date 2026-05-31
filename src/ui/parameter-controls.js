@@ -1,11 +1,11 @@
 // UI-контроли параметрів і фото.
 // Цей файл відповідає тільки за створення DOM-елементів вводу та синхронізацію
 // state.responses/state.photos після дій користувача. Бізнес-правила й діапазони
-// беруться з app-domain.js та agro-rules.js.
+// беруться з src/domain/inspection-domain.js та src/domain/agronomy-rules.js.
 
 // Рендерить слайдер фенологічної фази.
 // Значення слайдера є індексом у списку phaseOptions(), тому при зміні культури
-// responses очищаються в app-main.js і список фаз будується заново.
+// responses очищаються в src/core/inspection-app.js і список фаз будується заново.
 function renderPhenologyControls(row, key) {
   const response = state.responses[key];
   const phases = phaseOptions();

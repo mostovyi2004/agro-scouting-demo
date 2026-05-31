@@ -9,7 +9,7 @@
   <body>
     <header class="topbar">
       <div>
-        <p class="eyebrow">Демо оновлення</p>
+        <p class="eyebrow">Польова форма</p>
         <h1>Створення агрономічного інспектування</h1>
       </div>
       <div class="status-pill" id="summaryStatus">Чернетка</div>
@@ -17,7 +17,7 @@
 
     <main class="layout">
       <!-- Ліва колонка навігації не містить бізнес-логіки; її можна замінити
-           на компонент роутера у великому застосунку без зміни app-main.js. -->
+           на компонент роутера у великому застосунку без зміни src/core/inspection-app.js. -->
       <aside class="sidebar">
         <nav aria-label="Етапи форми">
           <a href="#base" class="active">Основа</a>
@@ -131,12 +131,18 @@
     </noscript>
 
     <script src="data/agro-config.js"></script>
-    <script src="agro-constants.js"></script>
-    <script src="agro-rules.js"></script>
-    <script src="agro-report.js"></script>
-    <script src="app-domain.js"></script>
-    <script src="app-controls.js"></script>
-    <script src="app-reporting.js"></script>
-    <script src="app-main.js"></script>
+    <script src="src/config/inspection-constants.js"></script>
+    <script src="src/config/runtime-fallbacks.js"></script>
+    <script src="src/domain/agronomy-rules.js"></script>
+    <script src="src/reports/inspection-html-report.js"></script>
+    <script src="src/references/crop-reference.js"></script>
+    <script src="src/references/disease-reference.js"></script>
+    <script src="src/references/pest-reference.js"></script>
+    <script src="src/references/weed-reference.js"></script>
+    <script src="src/references/phase-reference.js"></script>
+    <script src="src/domain/inspection-domain.js"></script>
+    <script src="src/ui/parameter-controls.js"></script>
+    <script src="src/services/inspection-reporting.js"></script>
+    <script src="src/core/inspection-app.js"></script>
   </body>
 </html>

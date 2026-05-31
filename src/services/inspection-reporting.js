@@ -181,7 +181,7 @@ function ensureCanExport(data) {
 }
 
 // Експортує самодостатній HTML-звіт для перегляду/друку.
-// Шаблон HTML живе в agro-report.js, а payload приходить із collectInspection().
+// Шаблон HTML живе в src/reports/inspection-html-report.js, а payload приходить із collectInspection().
 function exportHtmlReport() {
   const data = collectInspection();
   if (!ensureCanExport(data)) return;

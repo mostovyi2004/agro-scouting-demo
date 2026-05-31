@@ -7,7 +7,12 @@
 // Повертає тільки ті параметри, які належать до вибраної культури й періоду.
 // Це головний фільтр, від якого залежить список карток у секції "Параметри".
 function activeRows() {
-  return state.config.parameters.filter((row) => row[fieldMap.crop] === byId("cropSelect").value && row[fieldMap.period] === byId("periodSelect").value);
+  return window.AgroReferences.crops.parametersForSelection(
+    state.config,
+    fieldMap,
+    byId("cropSelect").value,
+    byId("periodSelect").value
+  );
 }
 
 // Формує початкову відповідь для параметра.
@@ -180,10 +185,7 @@ function hasSlider(row) {
 // Сортування іде за номером з конфіга, щоб слайдер рухався в правильній послідовності.
 function phaseOptions() {
   const crop = byId("cropSelect").value;
-  return state.config.phases
-    .filter((row) => row[fieldMap.crop] === crop)
-    .sort((a, b) => Number(a["№"]) - Number(b["№"]))
-    .map((row) => row["Фаза для списку"]);
+  return window.AgroReferences.phases.labelsForCrop(state.config, fieldMap, crop);
 }
 
 // Скорочує довгий label фази до першої читабельної частини.
@@ -198,30 +200,18 @@ function cleanPhaseLabel(label) {
 
 // Пул хвороб для активної культури.
 function diseaseOptions() {
-  return poolOptions("diseases");
+  return window.AgroReferences.diseases.namesForCrop(state.config, fieldMap, byId("cropSelect").value);
 }
 
 // Пул шкідників для активної культури.
 function pestOptions() {
-  return poolOptions("pests");
-}
-
-// Загальний helper для довідникових пулів diseases/pests.
-// Повертає унікальні назви, відсортовані за українською локаллю.
-function poolOptions(poolName) {
-  const crop = byId("cropSelect").value;
-  return unique(state.config[poolName].filter((row) => row[fieldMap.crop] === crop).map((row) => row["Назва"])).sort((a, b) => a.localeCompare(b, "uk"));
+  return window.AgroReferences.pests.namesForCrop(state.config, fieldMap, byId("cropSelect").value);
 }
 
 // Дістає короткий список інвазивних/злісних бур'янів для активної культури.
 // У конфігу це текстове поле, тому після вибірки воно ще розбивається splitChoices().
 function invasiveWeedOptions() {
-  const crop = byId("cropSelect").value;
-  const text = state.config.weeds
-    .filter((row) => row[fieldMap.crop] === crop && String(row["Група бур'янів"]).toLowerCase().includes("інвазив"))
-    .map((row) => row["Що обирає агроном"])
-    .join("; ");
-  return splitChoices(text).map((item) => item.replace(/^злісні\/інвазивні:\s*/i, "").trim());
+  return window.AgroReferences.weeds.invasiveSpeciesForCrop(state.config, fieldMap, byId("cropSelect").value);
 }
 
 // Розбиває текстовий список із Excel на чисті варіанти вибору.
