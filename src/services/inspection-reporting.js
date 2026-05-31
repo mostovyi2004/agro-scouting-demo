@@ -45,13 +45,14 @@ function renderProgress() {
   ];
   const completedBase = baseFields.filter(Boolean).length;
   const observations = data.observations;
-  const completedObs = observations.filter((item) => item.score > 0 || item.numeric_value || item.choices.length || item.status || item.distribution).length;
+  const completedObs = observations.filter(observationIsComplete).length;
   const requiredPhotos = requiredPhotoCount(data);
   const total = baseFields.length + Math.max(observations.length, 1) + requiredPhotos;
   const done = completedBase + completedObs + Math.min(state.photos.length, requiredPhotos);
   const percent = Math.round((done / total) * 100);
   byId("progressText").textContent = `${percent}%`;
   byId("progressBar").style.width = `${percent}%`;
+  renderWizard();
 }
 
 // Збирає всі дані форми у нормалізовану структуру.
@@ -188,7 +189,7 @@ function exportHtmlReport() {
   const status = calculateStatus(data, validate(data));
   const statusClass = status === "Зелений" ? "ok" : status === "Жовтий" ? "warn" : status === "Помаранчевий" ? "orange" : "danger";
   download(
-    `agro-inspection-${safeFilePart(data.inspection.field || "field")}.html`,
+    `${inspectionFileBase(data)}.html`,
     window.AgroReport.buildInspectionHtmlReport({ data, status, statusClass, escapeHtml }),
     "text/html"
   );
@@ -199,7 +200,7 @@ function exportDbJson() {
   const data = collectInspection();
   if (!ensureCanExport(data)) return;
   data.inspection.summary_status = calculateStatus(data, validate(data));
-  download(`agro-inspection-${safeFilePart(data.inspection.field || "field")}.json`, JSON.stringify(data, null, 2), "application/json");
+  download(`${inspectionFileBase(data)}.json`, JSON.stringify(data, null, 2), "application/json");
 }
 
 // Експортує CSV тільки по observation-рядках.
@@ -222,5 +223,23 @@ function exportObservationsCsv() {
       item.distribution,
     ]),
   ];
-  download(`agro-observations-${safeFilePart(data.inspection.field || "field")}.csv`, lines.map((line) => line.map(csvCell).join(",")).join("\n"), "text/csv");
+  download(`${inspectionFileBase(data)}-observations.csv`, lines.map((line) => line.map(csvCell).join(",")).join("\n"), "text/csv");
+}
+
+// Формує професійне й унікальне ім'я файлу експорту.
+// Порядок частин такий, щоб файли природно групувалися в папці:
+// дата -> культура -> поле -> короткий ID конкретної інспекції.
+function inspectionFileBase(data) {
+  const inspection = data.inspection;
+  const date = safeFilePart(inspection.date || new Date().toISOString().slice(0, 10));
+  const crop = safeFilePart(inspection.crop || "culture");
+  const field = safeFilePart(inspection.field || "field");
+  const id = shortInspectionId(inspection.inspection_id);
+  return `inspection-${date}-${crop}-${field}-${id}`;
+}
+
+// Повний UUID занадто довгий для назви файлу, але останніх 8 символів достатньо,
+// щоб HTML/JSON/CSV одного звіту легко зв'язати між собою і не перезаписувати.
+function shortInspectionId(id) {
+  return safeFilePart(String(id || Date.now()).slice(-8));
 }

@@ -15,6 +15,7 @@
 const state = {
   config: null,
   inspectionId: createInspectionId(),
+  activeStep: "base",
   responses: {},
   photos: [],
 };
@@ -70,6 +71,10 @@ const {
 
 // Дата за замовчуванням для нового огляду.
 const today = new Date().toISOString().slice(0, 10);
+
+// Порядок кроків майстра. ID мають збігатися з section[id] та data-step у навігації.
+// Користувач переходить між кроками через саму лінію етапів, без окремих кнопок.
+const WIZARD_STEPS = ["base", "parameters", "photos", "report"];
 
 // Поточна мапа колонок Excel-конфіга. Вона може уточнюватись у resolveFieldMap(),
 // якщо назви колонок у файлі відрізняються від очікуваних.
@@ -135,10 +140,14 @@ function bindEvents() {
   byId("exportHtml").addEventListener("click", exportHtmlReport);
   byId("exportJson").addEventListener("click", exportDbJson);
   byId("exportCsv").addEventListener("click", exportObservationsCsv);
-  document.querySelectorAll("nav a").forEach((link) => {
-    link.addEventListener("click", () => {
-      document.querySelectorAll("nav a").forEach((item) => item.classList.remove("active"));
-      link.classList.add("active");
+  byId("stepBack").addEventListener("click", goToPreviousStep);
+  byId("stepNext").addEventListener("click", goToNextStep);
+  document.querySelectorAll("[data-step]").forEach((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      const targetStep = link.dataset.step;
+      if (!canOpenStep(targetStep)) return;
+      setActiveStep(targetStep);
     });
   });
 }
@@ -179,6 +188,142 @@ function renderAll() {
   renderPhotos();
   renderReport();
   renderProgress();
+}
+
+// Активує один крок майстра і прибирає з екрану решту секцій.
+// Скрол до верху потрібен після кліку по нижній мобільній навігації.
+function setActiveStep(step) {
+  if (!WIZARD_STEPS.includes(step)) return;
+  state.activeStep = step;
+  renderWizard();
+  document.querySelector(".content")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// Велика кнопка "Назад": веде на попередній крок, якщо він існує.
+function goToPreviousStep() {
+  const index = WIZARD_STEPS.indexOf(state.activeStep);
+  if (index <= 0) return;
+  setActiveStep(WIZARD_STEPS[index - 1]);
+}
+
+// Велика кнопка "Далі": веде на наступний розблокований крок.
+// Якщо поточний крок ще не заповнений, кнопка лишається вимкненою в renderWizard().
+function goToNextStep() {
+  const index = WIZARD_STEPS.indexOf(state.activeStep);
+  const nextStep = WIZARD_STEPS[index + 1];
+  if (!nextStep || !canOpenStep(nextStep)) return;
+  setActiveStep(nextStep);
+}
+
+// Крок можна відкрити, якщо він уже доступний за послідовністю заповнення.
+// Назад завжди можна перейти, вперед - тільки до першого ще неготового етапу.
+function canOpenStep(step) {
+  return WIZARD_STEPS.indexOf(step) <= maxOpenStepIndex();
+}
+
+// Рахує найдальший доступний крок. Це робить форму послідовною без кнопок:
+// користувач заповнює поточний блок, а наступний пункт лінії стає активним.
+function maxOpenStepIndex() {
+  const completion = wizardCompletion();
+  let index = 0;
+  for (let i = 0; i < WIZARD_STEPS.length - 1; i += 1) {
+    if (!completion[WIZARD_STEPS[i]]) break;
+    index = i + 1;
+  }
+  return index;
+}
+
+// Оновлює видимість секцій, aria-стани та класи лінії кроків.
+// Якщо дані змінилися і поточний крок став недоступним, форма м'яко повертає
+// користувача на найдальший дозволений крок.
+function renderWizard() {
+  const maxIndex = maxOpenStepIndex();
+  const activeIndex = WIZARD_STEPS.indexOf(state.activeStep);
+  if (activeIndex > maxIndex) state.activeStep = WIZARD_STEPS[maxIndex];
+  const currentIndex = WIZARD_STEPS.indexOf(state.activeStep);
+
+  document.querySelectorAll(".band").forEach((section) => {
+    const isActive = section.id === state.activeStep;
+    section.hidden = !isActive;
+    section.classList.toggle("is-active", isActive);
+  });
+
+  document.querySelectorAll("[data-step]").forEach((link) => {
+    const step = link.dataset.step;
+    const stepIndex = WIZARD_STEPS.indexOf(step);
+    const isActive = step === state.activeStep;
+    const isOpen = stepIndex <= maxIndex;
+    link.classList.toggle("active", isActive);
+    link.classList.toggle("is-complete", stepIndex < maxIndex);
+    link.classList.toggle("is-locked", !isOpen);
+    link.setAttribute("aria-current", isActive ? "step" : "false");
+    link.setAttribute("aria-disabled", isOpen ? "false" : "true");
+  });
+
+  const backButton = byId("stepBack");
+  const nextButton = byId("stepNext");
+  const nextStep = WIZARD_STEPS[currentIndex + 1];
+  backButton.disabled = currentIndex === 0;
+  nextButton.disabled = !nextStep || !canOpenStep(nextStep);
+  nextButton.textContent = currentIndex === WIZARD_STEPS.length - 1 ? "Готово" : "Далі";
+}
+
+// Визначає готовність кожного кроку окремо. Це не замінює validate(), а лише
+// керує послідовністю майстра і розблокуванням пунктів навігації.
+function wizardCompletion() {
+  const data = collectInspection();
+  const baseDone = Boolean(
+    data.inspection.agronomist &&
+      data.inspection.date &&
+      data.inspection.field &&
+      data.inspection.area &&
+      data.inspection.crop &&
+      data.inspection.period
+  );
+  const observations = data.observations;
+  const parametersDone =
+    observations.length > 0 &&
+    observations.every(observationIsComplete);
+  const photosDone = state.photos.length >= requiredPhotoCount(data);
+  return {
+    base: baseDone,
+    parameters: parametersDone,
+    photos: photosDone,
+    report: Boolean(data.inspection.operation_risk && data.inspection.summary_comment),
+  };
+}
+
+// Перевіряє, чи observation не блокує перехід далі.
+// Для проблемних блоків порожня відповідь є змістовною: це означає
+// "не виявлено", а не "агроном забув заповнити". Тому шкідники, хвороби,
+// бур'яни, дефекти сівби й чекбокс-параметри можуть бути завершені без вибору.
+function observationIsComplete(item) {
+  return observationHasValue(item) || observationAllowsEmptyValue(item);
+}
+
+// Реальна введена відповідь: число, вибір, статус або текстовий розподіл.
+function observationHasValue(item) {
+  return Boolean(item.score > 0 || item.numeric_value || item.choices.length || item.status || item.distribution);
+}
+
+// Порожнє значення дозволене там, де агрономічно нормальний сценарій - "немає".
+// Цю логіку тримаємо окремо, щоб майбутні необов'язкові параметри додавались
+// явно, без випадкового послаблення всіх полів форми.
+function observationAllowsEmptyValue(item) {
+  const type = String(item.input_type || "").toLowerCase();
+  const parameter = String(item.parameter || "").toLowerCase();
+  return (
+    type.includes("пул + слайдер") ||
+    type.includes("групи + слайдер") ||
+    type.includes("дефекти + слайдери") ||
+    type.includes("чекбокс") ||
+    parameter.includes("хвороб") ||
+    parameter.includes("шкідник") ||
+    parameter.includes("забур") ||
+    parameter.includes("бур'ян") ||
+    parameter.includes("бур’ян") ||
+    (parameter.includes("пропуски") && parameter.includes("дублікати"))
+  );
 }
 
 // Рендерить список параметрів для активної пари "культура + період".

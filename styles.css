@@ -11,13 +11,16 @@
   --line-strong: #c5ced8;
   --accent: #17614f;
   --accent-dark: #10483b;
+  --accent-bright: #11a37f;
   --accent-soft: #e8f3ef;
+  --gold: #c9871c;
   --secondary: #344054;
   --danger: #b42318;
   --warn: #b54708;
   --ok: #067647;
   --focus: rgba(23, 97, 79, 0.16);
   --shadow: 0 8px 22px rgba(17, 24, 39, 0.055);
+  --shadow-soft: 0 18px 44px rgba(15, 23, 42, 0.08);
 }
 
 * {
@@ -30,11 +33,18 @@ html {
 
 body {
   margin: 0;
-  background: var(--bg);
+  background:
+    linear-gradient(135deg, rgba(23, 97, 79, 0.08), transparent 34%),
+    linear-gradient(315deg, rgba(201, 135, 28, 0.07), transparent 30%),
+    var(--bg);
   color: var(--ink);
   font-family: Inter, "Segoe UI", Arial, sans-serif;
   font-size: 14px;
   line-height: 1.4;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 button,
@@ -103,7 +113,7 @@ h2 {
 
 .layout {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   width: min(1360px, 100%);
   margin: 0 auto;
@@ -112,10 +122,12 @@ h2 {
 
 .sidebar {
   position: sticky;
-  top: 72px;
+  top: 68px;
   align-self: start;
   display: grid;
+  grid-template-columns: minmax(360px, 1fr) minmax(180px, 220px) minmax(180px, 220px);
   gap: 10px;
+  z-index: 5;
 }
 
 nav,
@@ -126,27 +138,83 @@ nav,
   box-shadow: var(--shadow);
 }
 
-nav {
+.step-nav {
   display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 2px;
+  position: relative;
   padding: 6px;
   border-radius: 8px;
+  overflow: hidden;
 }
 
-nav a {
-  padding: 9px 10px;
+.step-nav::before {
+  content: "";
+  position: absolute;
+  left: 11%;
+  right: 11%;
+  top: 50%;
+  height: 2px;
+  background: var(--line);
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+.step-nav a {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 58px;
+  padding: 8px 10px;
   border-radius: 6px;
+  background: var(--surface);
   color: var(--secondary);
   font-size: 13px;
   font-weight: 750;
   text-decoration: none;
-  transition: background 140ms ease, color 140ms ease;
+  transition: background 140ms ease, color 140ms ease, opacity 140ms ease, transform 140ms ease;
 }
 
-nav a.active,
-nav a:hover {
+.step-nav a span {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: white;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.step-nav a.active,
+.step-nav a:hover {
   background: var(--accent-soft);
   color: var(--accent-dark);
+}
+
+.step-nav a.active {
+  box-shadow: inset 0 -3px 0 var(--accent-bright);
+}
+
+.step-nav a.active span,
+.step-nav a.is-complete span {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
+}
+
+.step-nav a.is-complete {
+  color: var(--accent-dark);
+}
+
+.step-nav a.is-locked {
+  cursor: not-allowed;
+  opacity: 0.44;
 }
 
 .mini-panel {
@@ -154,6 +222,9 @@ nav a:hover {
   gap: 7px;
   padding: 12px;
   border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(248, 250, 251, 0.96), rgba(255, 255, 255, 0.98)),
+    var(--surface);
 }
 
 .mini-panel span {
@@ -190,6 +261,23 @@ nav a:hover {
 .band {
   padding: clamp(14px, 2vw, 22px);
   border-radius: 8px;
+  box-shadow: var(--shadow-soft);
+}
+
+.band.is-active {
+  animation: panel-in 180ms ease both;
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .section-title {
@@ -200,6 +288,20 @@ nav a:hover {
   margin-bottom: 14px;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--line);
+}
+
+.section-title h2 {
+  position: relative;
+}
+
+.section-title h2::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -11px;
+  width: 54px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--gold));
 }
 
 .form-grid {
@@ -236,7 +338,7 @@ textarea {
   min-width: 0;
   border: 1px solid var(--line-strong);
   border-radius: 6px;
-  background: var(--surface);
+  background: linear-gradient(180deg, #ffffff, #fbfcfd);
   color: var(--ink);
   outline: none;
   transition: border-color 130ms ease, box-shadow 130ms ease, background 130ms ease;
@@ -277,6 +379,13 @@ textarea:focus {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface);
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.parameter-card:hover {
+  border-color: #b9c4d0;
+  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.06);
+  transform: translateY(-1px);
 }
 
 .parameter-head {
@@ -481,7 +590,9 @@ textarea:focus {
   padding: 12px;
   border: 1px dashed #aeb8c5;
   border-radius: 8px;
-  background: var(--surface-muted);
+  background:
+    linear-gradient(135deg, rgba(23, 97, 79, 0.08), transparent 42%),
+    var(--surface-muted);
 }
 
 .photo-uploader input {
@@ -621,9 +732,84 @@ textarea:focus {
   opacity: 0.45;
 }
 
+.wizard-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0 0;
+}
+
+.step-button {
+  min-width: 180px;
+  min-height: 54px;
+  padding: 0 28px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 140ms ease, background 140ms ease, border-color 140ms ease, opacity 140ms ease;
+}
+
+.step-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.step-button-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+  color: white;
+  box-shadow: 0 12px 24px rgba(16, 72, 59, 0.18);
+}
+
+.step-button-secondary {
+  border-color: var(--line-strong);
+  background: white;
+  color: var(--secondary);
+}
+
+.step-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+  transform: none;
+}
+
 @media (max-width: 1100px) {
   .layout {
     grid-template-columns: 190px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .sidebar {
+    grid-template-columns: 1fr;
+    top: 82px;
+  }
+
+  .content {
+    min-width: 0;
+  }
+
+  .step-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .step-nav::before {
+    top: 12%;
+    bottom: 12%;
+    left: 23px;
+    right: auto;
+    width: 2px;
+    height: auto;
+    transform: none;
+  }
+
+  .step-nav a {
+    justify-content: flex-start;
+    min-height: 48px;
+    padding-left: 10px;
+  }
+
+  .step-nav a.active {
+    box-shadow: inset 3px 0 0 var(--accent-bright);
   }
 
   .form-grid,
@@ -637,23 +823,68 @@ textarea:focus {
   }
 }
 
-@media (max-width: 860px) {
+@media (max-width: 720px), (max-width: 920px) and (max-height: 860px) {
   .layout {
     grid-template-columns: 1fr;
+    padding-bottom: 178px;
   }
 
   .sidebar {
-    position: static;
-    grid-template-columns: minmax(0, 1fr) repeat(2, minmax(120px, 180px));
-    align-items: stretch;
+    position: fixed;
+    top: auto;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    grid-template-columns: 1fr;
+    z-index: 20;
+    pointer-events: none;
   }
 
-  nav {
+  .sidebar .mini-panel {
+    display: none;
+  }
+
+  .step-nav {
+    pointer-events: auto;
     grid-template-columns: repeat(4, 1fr);
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.18);
   }
 
-  nav a {
+  .step-nav::before {
+    left: 11%;
+    right: 11%;
+    top: 50%;
+    bottom: auto;
+    width: auto;
+    height: 2px;
+    transform: translateY(-50%);
+  }
+
+  .step-nav a {
+    justify-content: center;
     text-align: center;
+  }
+
+  .step-nav a.active {
+    box-shadow: inset 0 -3px 0 var(--accent-bright);
+  }
+
+  .wizard-actions {
+    position: fixed;
+    right: 8px;
+    bottom: 92px;
+    left: 8px;
+    z-index: 19;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding: 0;
+  }
+
+  .step-button {
+    min-width: 0;
+    min-height: 56px;
+    padding: 0 18px;
   }
 }
 
@@ -673,10 +904,9 @@ textarea:focus {
   }
 
   .layout {
-    padding: 10px 8px 28px;
+    padding: 10px 8px 178px;
   }
 
-  .sidebar,
   .form-grid,
   .control-grid,
   .check-list,
@@ -687,14 +917,18 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 
+  .step-nav a {
+    min-height: 58px;
+    flex-direction: column;
+    gap: 4px;
+    padding: 7px 4px;
+    font-size: 11px;
+  }
+
   .section-title {
     align-items: start;
     flex-direction: column;
     gap: 3px;
-  }
-
-  nav {
-    grid-template-columns: repeat(2, 1fr);
   }
 
   .parameter-head {
@@ -708,5 +942,10 @@ textarea:focus {
   .score-badge {
     min-width: 0;
     width: 100%;
+  }
+
+  .step-button {
+    min-height: 50px;
+    padding: 0 16px;
   }
 }

@@ -19,11 +19,11 @@
       <!-- Ліва колонка навігації не містить бізнес-логіки; її можна замінити
            на компонент роутера у великому застосунку без зміни src/core/inspection-app.js. -->
       <aside class="sidebar">
-        <nav aria-label="Етапи форми">
-          <a href="#base" class="active">Основа</a>
-          <a href="#parameters">Параметри</a>
-          <a href="#photos">Фото</a>
-          <a href="#report">Звіт</a>
+        <nav class="step-nav" aria-label="Етапи форми">
+          <a href="#base" class="active" data-step="base"><span>01</span>Основа</a>
+          <a href="#parameters" data-step="parameters"><span>02</span>Параметри</a>
+          <a href="#photos" data-step="photos"><span>03</span>Фото</a>
+          <a href="#report" data-step="report"><span>04</span>Звіт</a>
         </nav>
         <section class="mini-panel">
           <span>Заповнено</span>
@@ -123,6 +123,11 @@
             <button id="exportCsv" type="button">CSV спостережень</button>
           </div>
         </section>
+
+        <div class="wizard-actions" aria-label="Навігація між кроками">
+          <button id="stepBack" class="step-button step-button-secondary" type="button">Назад</button>
+          <button id="stepNext" class="step-button step-button-primary" type="button">Далі</button>
+        </div>
       </section>
     </main>
 
